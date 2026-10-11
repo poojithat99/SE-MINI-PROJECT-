@@ -19,5 +19,10 @@ class TestRepositoryStructure(unittest.TestCase):
         )
 
 
+    def test_ci_workflow_exists(self):
+        workflow = ROOT / ".github" / "workflows" / "ci.yml"
+        self.assertTrue(workflow.is_file())
+
+
 if __name__ == "__main__":
     unittest.main()
