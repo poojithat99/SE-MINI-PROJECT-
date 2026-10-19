@@ -63,7 +63,9 @@ def login_user(username, password):
 
     token = jwt.encode(payload, secret, algorithm="HS256")
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-    }
+   return {
+    "access_token": token,
+    "token_type": "bearer",
+    "expires_in": 1800,
+}
+
