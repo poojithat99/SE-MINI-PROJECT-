@@ -147,8 +147,26 @@ def update_text_document(
 
     owner = resolve_owner(account)
 
+   
     try:
         get_user_document(owner["id"], document_id)
+        saved = edit_text_document(
+            owner["id"],
+            document_id,
+            title,
+            content,
+            category=data.category,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found",
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
         saved = edit_text_document(
             owner["id"],
             document_id,

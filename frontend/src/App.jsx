@@ -196,7 +196,7 @@ const [semanticResults, setSemanticResults] = useState([])
     }
   }
 
-  
+
 
 
 async function semanticSearch(query) {
@@ -750,7 +750,7 @@ function openDocumentPreview(document) {
       required
       aria-label="Semantic search query"
     />
-    
+
 <select
   value={semanticCategory}
   onChange={(event) => setSemanticCategory(event.target.value)}
@@ -811,7 +811,9 @@ function openDocumentPreview(document) {
             <h3>
               {result.title || result.original_filename || 'Untitled document'}
             </h3>
-            <p>File type: {(result.file_type || 'Unknown').toUpperCase()}</p>
+           <p>
+              File type: {(result.file_type || 'Unknown').toUpperCase()}
+            </p>
             <p>Category: {result.category || 'Uncategorized'}</p>
             <p>
               Uploaded: {result.uploaded_at
@@ -819,7 +821,11 @@ function openDocumentPreview(document) {
                 : 'Date unavailable'}
             </p>
             <p>
-             {result.snippet || 'No matching text preview available.'}
+              {result.snippet ||
+                result.extracted_text ||
+                result.content ||
+                result.summary ||
+                'No matching text preview available.'}
             </p>
           </div>
         </article>
@@ -915,7 +921,7 @@ function openDocumentPreview(document) {
                   </div>
                 ) : (
                   <>
-                  
+
 <div className="document-toolbar">
   <label htmlFor="document-sort">Sort documents:</label>
   <select
@@ -971,7 +977,7 @@ function openDocumentPreview(document) {
                       </article>
                     ))}
                   </div>
-                  
+
 <div className="pagination-controls">
   <button
     className="secondary-button"
