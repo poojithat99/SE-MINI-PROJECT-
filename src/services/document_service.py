@@ -338,7 +338,7 @@ def edit_user_document(owner_id, document_id, updates):
     return _public_document(document)
 
 
-def edit_text_document(owner_id, document_id, title, content):
+def edit_text_document(owner_id, document_id, title, content, category=None):
     """Update a plain-text document and rebuild its processing/index data."""
     document = get_document(document_id, owner_id)
     if document is None:
@@ -367,10 +367,13 @@ def edit_text_document(owner_id, document_id, title, content):
     # Replace the stored content and update the title.
     path.write_bytes(content_bytes)
     updated = update_document(
-        document_id,
-        owner_id,
-        {"title": title.strip()},
-    )
+    document_id,
+    owner_id,
+    {
+        "title": title.strip(),
+        "category": category,
+    },
+)
     if updated is None:
         raise FileNotFoundError("Document not found")
 

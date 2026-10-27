@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.database.init_db import initialize_database
 from src.api.auth import router as auth_router
 from src.api.documents import router as documents_router
+from src.api.text_documents import router as text_documents_router
 from src.api.search import router as search_router
 from src.api.admin import router as admin_router
 
@@ -47,6 +48,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(documents_router)
+app.include_router(text_documents_router)
 app.include_router(search_router)
 app.include_router(admin_router)
 

@@ -229,10 +229,10 @@ def semantic_search(
         ):
             continue
 
-        previous = best_by_document.get(document_id)
+        previous = best_by_document.get(service_document_id)
 
         if previous is None or relevance > previous["relevance"]:
-            best_by_document[document_id] = {
+            best_by_document[service_document_id] = {
                 "relevance": relevance,
                 "document": document,
                 "passage": match["passage"],
