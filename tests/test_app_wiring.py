@@ -30,7 +30,13 @@ class TestAppWiring(unittest.TestCase):
         ]
         self.assertCountEqual(
             routers,
-            ["auth_router", "documents_router", "search_router", "admin_router"],
+            [
+    "auth_router",
+    "documents_router",
+    "text_documents_router",
+    "search_router",
+    "admin_router",
+],
         )
 
     def test_lifespan_runs_all_database_initialization_once(self):
