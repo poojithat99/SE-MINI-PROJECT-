@@ -3,6 +3,7 @@ from fastapi import Depends, Header, HTTPException, status
 from src.services.auth_service import decode_access_token
 
 
+
 def get_current_user(
     authorization: str | None = Header(default=None),
 ):
@@ -24,9 +25,10 @@ def get_current_user(
     try:
         return decode_access_token(token.strip())
     except PermissionError as exc:
+        print("TOKEN VALIDATION ERROR:", str(exc))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid, expired, or revoked token",
+            detail=str(exc),
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 

@@ -23,19 +23,43 @@ async function apiRequest(path, options = {}) {
   const data = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    if (response.status === 401) {
-      sessionStorage.removeItem('access_token')
-      sessionStorage.removeItem('user_role')
-      throw new Error('Your session expired. Please log in again.')
-    }
+   if (response.status === 401) {
+  console.error('401 response details:', data.detail)
+  throw new Error(data.detail || 'Authentication failed.')
+}
     throw new Error(data.detail || 'Something went wrong. Please try again.')
   }
 
   return data
 }
 
+
+
+
 function App() {
   const [page, setPage] = useState('login')
+  const [adminTab, setAdminTab] = useState('categories')
+const [adminCategories, setAdminCategories] = useState([])
+const [adminAuditLogs, setAdminAuditLogs] = useState([])
+async function loadAdminCategories() {
+  try {
+    const data = await apiRequest('/api/admin/categories')
+    setAdminCategories(data.items || [])
+  } catch (err) {
+    setDashboardMessage(err.message)
+    setDashboardError(true)
+  }
+}
+
+async function loadAdminAuditLogs() {
+  try {
+    const data = await apiRequest('/api/admin/audit-logs')
+    setAdminAuditLogs(data.items || [])
+  } catch (err) {
+    setDashboardMessage(err.message)
+    setDashboardError(true)
+  }
+}
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -50,18 +74,24 @@ function App() {
   const [previewDocument, setPreviewDocument] = useState(null)
 const [sortOrder, setSortOrder] = useState('newest')
 const [currentPage, setCurrentPage] = useState(1)
-const pageSize = 5
+const pageSize = 10
 
   const [documentsLoading, setDocumentsLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [semanticQuery, setSemanticQuery] = useState('')
+  const [searchPage, setSearchPage] = useState(1)
+  const [searchTotal, setSearchTotal] = useState(0)
+  const [searchMode, setSearchMode] = useState('semantic')
   const [semanticCategory, setSemanticCategory] = useState('')
 const [semanticFileType, setSemanticFileType] = useState('')
+const [dateFrom, setDateFrom] = useState('')
+const [dateTo, setDateTo] = useState('')
 const [semanticResults, setSemanticResults] = useState([])
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [category, setCategory] = useState('')
   const [dashboardMessage, setDashboardMessage] = useState('')
   const [dashboardError, setDashboardError] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -127,6 +157,7 @@ const [semanticResults, setSemanticResults] = useState([])
       } else {
         sessionStorage.setItem('access_token', data.access_token)
         sessionStorage.setItem('user_role', data.role)
+        console.log('My role:', data.role)
         setLoggedIn(true)
         setDashboardMessage(`Welcome, ${username}!`)
         setDashboardError(false)
@@ -206,6 +237,58 @@ async function semanticSearch(query) {
   }
 }
 
+ 
+
+
+async function keywordSearch(query, page = 1) {
+  if (query.trim().length < 1) {
+    setDashboardError(true)
+    setDashboardMessage('Please enter a search term.')
+    return
+  }
+
+  setDashboardMessage('')
+  setDashboardError(false)
+  setSearchPage(1)
+
+  try {
+    const params = new URLSearchParams({
+      q: query.trim(),
+    page: String(page),
+    })
+
+    if (semanticCategory) {
+      params.set('category', semanticCategory)
+    }
+
+    if (semanticFileType) {
+      params.set('file_type', semanticFileType)
+    }
+    if (dateFrom) {
+  params.set('date_from', dateFrom)
+}
+
+if (dateTo) {
+  params.set('date_to', dateTo)
+}
+
+    const data = await apiRequest(
+      `/api/search/keyword?${params.toString()}`
+    )
+
+    setSemanticResults(data.items || [])
+    setDashboardMessage(
+      `Found ${data.total ?? data.items?.length ?? 0} matching documents.`
+    )
+  } catch (err) {
+    setDashboardError(true)
+    setDashboardMessage(err.message)
+  }
+}
+
+
+
+
 
   async function loadUploadedFiles() {
   try {
@@ -261,6 +344,7 @@ async function uploadFile(event) {
 async function downloadFile(file) {
   try {
     const token = sessionStorage.getItem('access_token')
+    console.log('Token exists:', !!token)
     const response = await fetch(
       `${API_URL}/api/documents/${file.id}/download`,
       { headers: token ? { Authorization: `Bearer ${token}` } : {} }
@@ -300,6 +384,7 @@ async function downloadFile(file) {
     setEditingId(document.id)
     setTitle(document.title)
     setContent(document.content)
+    setCategory(document.category || '')
     setEditorOpen(true)
     setDashboardMessage('')
     setDashboardError(false)
@@ -323,7 +408,7 @@ function openDocumentPreview(document) {
   : '/api/text-documents'
       await apiRequest(path, {
         method: isEditing ? 'PUT' : 'POST',
-        body: JSON.stringify({ title, content }),
+       body: JSON.stringify({ title, content, category }),
       })
 
       setEditorOpen(false)
@@ -383,6 +468,17 @@ function openDocumentPreview(document) {
           </div>
 
           <p className="sidebar-label">WORKSPACE</p>
+          {sessionStorage.getItem('user_role') === 'admin' && (
+  <button
+    className="sidebar-link"
+    onClick={() => {
+      setPage('admin')
+      loadAdminCategories()
+    }}
+  >
+    Admin Panel
+  </button>
+)}
           <button className={`sidebar-link ${!editorOpen && !showFiles ? 'active' : ''}`} onClick={() => {
             setEditorOpen(false)
             setShowFiles(false)
@@ -447,7 +543,62 @@ function openDocumentPreview(document) {
             </p>
           )}
 
-        {editorOpen ? (
+ {page === 'admin' ? (
+  <section className="content-panel">
+    <h2>Admin Panel</h2>
+
+    <button
+      className="secondary-button"
+      onClick={() => {
+        setPage('dashboard')
+        loadDocuments()
+      }}
+    >
+      Back to Dashboard
+    </button>
+
+    <div className="form-actions">
+      <button
+        className="primary-button"
+        onClick={() => {
+          setAdminTab('categories')
+          loadAdminCategories()
+        }}
+      >
+        Manage Categories
+      </button>
+
+      <button
+        className="secondary-button"
+        onClick={() => {
+          setAdminTab('logs')
+          loadAdminAuditLogs()
+        }}
+      >
+        Audit Logs
+      </button>
+    </div>
+
+    {adminTab === 'categories' ? (
+      <div>
+        <h3>Categories</h3>
+        {adminCategories.map((item) => (
+          <p key={item.id}>{item.name} — {item.description}</p>
+        ))}
+      </div>
+    ) : (
+      <div>
+        <h3>Audit Logs</h3>
+        {adminAuditLogs.map((item) => (
+          <p key={item.id}>
+            {item.action} — {item.details} ({item.created_at})
+          </p>
+        ))}
+      </div>
+    )}
+  </section>
+) : editorOpen ? (
+     
             <section className="content-panel">
               <form className="document-form" onSubmit={saveDocument}>
                 <label htmlFor="document-title">Document title</label>
@@ -459,6 +610,17 @@ function openDocumentPreview(document) {
                   maxLength={200}
                   required
                 />
+                <label htmlFor="document-category">Category</label>
+<select
+  id="document-category"
+  value={category}
+  onChange={(event) => setCategory(event.target.value)}
+>
+  <option value="">Uncategorized</option>
+  <option nextPagevalue="Academic">Academic</option>
+  <option value="Work">Work</option>
+  <option value="Personal">Personal</option>
+</select>
 
                 <label htmlFor="document-content">Content</label>
                 <textarea
@@ -562,11 +724,24 @@ function openDocumentPreview(document) {
   <p>Find documents by meaning, not just exact words.</p>
 
   <form
-    onSubmit={(event) => {
-      event.preventDefault()
-      semanticSearch(semanticQuery)
-    }}
-  >
+   onSubmit={(event) => {
+  event.preventDefault()
+  if (searchMode === 'keyword') {
+    keywordSearch(semanticQuery)
+  } else {
+    semanticSearch(semanticQuery)
+  }
+}}
+>
+<select
+  value={searchMode}
+  onChange={(event) => setSearchMode(event.target.value)}
+  aria-label="Search mode"
+>
+  <option value="semantic">AI Semantic Search</option>
+  <option value="keyword">Keyword Search</option>
+</select>
+  
     <input
       value={semanticQuery}
       onChange={(event) => setSemanticQuery(event.target.value)}
@@ -582,7 +757,16 @@ function openDocumentPreview(document) {
   aria-label="Filter by category"
 >
   <option value="">All categories</option>
-  <option value="Uncategorized">Uncategorized</option>
+ <option value="Uncategorized">Uncategorized</option>
+<option value="Academic">Academic</option>
+<option value="Work">Work</option>
+<option value="Personal">Personal</option>
+<option value="Technology">Technology</option>
+<option value="Business and Finance">Business and Finance</option>
+<option value="Education">Education</option>
+<option value="Health and Medicine">Health and Medicine</option>
+<option value="Law and Government">Law and Government</option>
+<option value="Science and Research">Science and Research</option>
 </select>
 
 <select
@@ -595,13 +779,31 @@ function openDocumentPreview(document) {
   <option value="docx">DOCX</option>
   <option value="txt">TXT</option>
 </select>
+<label>
+  Uploaded from
+  <input
+    type="date"
+    value={dateFrom}
+    onChange={(event) => setDateFrom(event.target.value)}
+  />
+</label>
 
+<label>
+  Uploaded to
+  <input
+    type="date"
+    value={dateTo}
+    onChange={(event) => setDateTo(event.target.value)}
+  />
+</label>
     <button className="primary-button" type="submit">
-      Search by meaning
+      {searchMode === 'keyword' ? 'Search by keyword' : 'Search by meaning'}
     </button>
   </form>
 
-  {semanticResults.length > 0 && (
+ 
+{semanticResults.length > 0 && (
+  <>
     <div className="document-list">
       {semanticResults.map((result, index) => (
         <article className="document-item" key={result.id ?? index}>
@@ -609,28 +811,60 @@ function openDocumentPreview(document) {
             <h3>
               {result.title || result.original_filename || 'Untitled document'}
             </h3>
-           
-<p>
-  File type: {(result.file_type || 'Unknown').toUpperCase()}
-</p>
-<p>Category: {result.category || 'Uncategorized'}</p>
-<p>
-  Uploaded: {result.uploaded_at
-    ? new Date(result.uploaded_at).toLocaleDateString()
-    : 'Date unavailable'}
-</p>
-<p>
-  {result.extracted_text ||
-    result.content ||
-    result.summary ||
-    'Document found by semantic search.'}
-</p>
-
+            <p>File type: {(result.file_type || 'Unknown').toUpperCase()}</p>
+            <p>Category: {result.category || 'Uncategorized'}</p>
+            <p>
+              Uploaded: {result.uploaded_at
+                ? new Date(result.uploaded_at).toLocaleDateString()
+                : 'Date unavailable'}
+            </p>
+            <p>
+             {result.snippet || 'No matching text preview available.'}
+            </p>
           </div>
         </article>
       ))}
     </div>
-  )}
+
+    <div className="pagination-controls">
+      <button
+        type="button"
+        disabled={searchPage <= 1}
+        onClick={() => {
+          const nextPage = searchPage - 1
+          setSearchPage(nextPage)
+          if (searchMode === 'keyword') {
+            keywordSearch(semanticQuery, nextPage)
+          } else {
+            semanticSearch(semanticQuery)
+          }
+        }}
+      >
+        Previous
+      </button>
+
+      <span>Page {searchPage}</span>
+
+      <button
+        type="button"
+        disabled={searchPage * 10 >= searchTotal}
+        onClick={() => {
+          const nextPage = searchPage + 1
+          setSearchPage(nextPage)
+          if (searchMode === 'keyword') {
+            keywordSearch(semanticQuery, nextPage)
+          } else {
+            semanticSearch(semanticQuery)
+          }
+        }}
+      >
+        Next
+      </button>
+    </div>
+  </>
+)}
+
+
 </section>
 
               <section className="content-panel">
@@ -638,12 +872,15 @@ function openDocumentPreview(document) {
                   <div>
 
 
-                    <h2>Your documents</h2>
-                    <p>Search, edit, and organize your saved content.</p>
-                  </div>
+                    <div>
+  <h2>Your documents</h2>
+  <p>Search, edit, and organize your saved content.</p>
+</div>
+
+
                   <span className="document-count">{documents.length} items</span>
                 </div>
-
+</div>
                 <form className="search-row" onSubmit={(event) => {
                   event.preventDefault()
                   loadDocuments(search)
@@ -711,8 +948,11 @@ function openDocumentPreview(document) {
                         <div className="document-symbol">▤</div>
                         <div className="document-details">
                           <h3>{document.title}</h3>
-                          <p>{document.content}</p>
-                          <small>Document #{document.id}</small>
+                         <p>File: {document.original_filename || 'Text document'}</p>
+<p>Category: {document.category || 'Uncategorized'}</p>
+<p>File type: {(document.file_type || 'Text').toUpperCase()}</p>
+<p>Status: {document.processing_status || document.status || 'Available'}</p>
+<small>Document #{document.id}</small>
                         </div>
                         <div className="document-actions">
                           <button className="secondary-button" onClick={() => openEditDocument(document)}>
@@ -875,5 +1115,6 @@ function openDocumentPreview(document) {
     </main>
   )
 }
+
 
 export default App
