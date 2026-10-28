@@ -1,3 +1,4 @@
+import logging
 
 from pathlib import Path
 
@@ -31,9 +32,11 @@ from src.services.document_service import (
     list_user_documents,
     get_user_document,
     queue_reprocessing,
+    delete_user_document,
 )
 
 router = APIRouter(prefix="/api/documents", tags=["Documents"])
+logger = logging.getLogger(__name__)
 
 
 def account_identity_id(account: dict) -> int:
@@ -227,6 +230,8 @@ async def upload_document(
     finally:
         await file.close()
 
+    document = None
+    service_doc = None
     try:
         owner = document_owner(db, account)
         document = Document(
@@ -269,7 +274,28 @@ async def upload_document(
             service_doc,
         )
     except Exception:
+        # A rollback does not undo a document committed earlier in this
+        # handler. Compensate explicitly so a failed upload is not listed as
+        # a valid document with a missing file.
         db.rollback()
+        if service_doc is not None:
+            try:
+                delete_user_document(
+                    account_identity_id(account),
+                    service_doc["id"],
+                    index_document_id=document.id,
+                )
+            except Exception:
+                logger.exception("Could not clean up failed service upload")
+        if document is not None and document.id is not None:
+            try:
+                persisted = db.get(Document, document.id)
+                if persisted is not None:
+                    db.delete(persisted)
+                    db.commit()
+            except Exception:
+                db.rollback()
+                logger.exception("Could not clean up failed primary upload")
         delete_file(storage_path)
         raise
 

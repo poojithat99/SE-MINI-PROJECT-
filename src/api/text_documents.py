@@ -13,6 +13,7 @@ from src.services.document_service import (
     get_download_info,
     delete_user_document,
     edit_text_document,
+    edit_user_document,
 )
 
 router = APIRouter(prefix="/api/text-documents", tags=["Text Documents"])
@@ -103,6 +104,8 @@ def create_text_document(
 
     if not title or not content:
         raise HTTPException(status_code=400, detail="Title and content are required")
+    if data.category is not None and len(data.category.strip()) > 100:
+        raise HTTPException(status_code=400, detail="Category must not exceed 100 characters")
 
     owner = resolve_owner(account)
     filename = f"{title[:180]}.txt"
@@ -114,6 +117,12 @@ def create_text_document(
             content=content.encode("utf-8"),
             title=title,
         )
+        # Preserve an explicitly selected category through AI processing.
+        # The repository marks this as manual so classification won't replace it.
+        if data.category is not None and data.category.strip():
+            edit_user_document(
+                owner["id"], result["id"], {"category": data.category.strip()}
+            )
         process_document(result["id"], owner["id"])
         saved = get_user_document(owner["id"], result["id"])
     except (ValueError, FileNotFoundError) as exc:
@@ -167,17 +176,6 @@ def update_text_document(
             status_code=400,
             detail=str(exc),
         ) from exc
-        saved = edit_text_document(
-            owner["id"],
-            document_id,
-            title,
-            content,
-            category=data.category,
-        )
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail="Document not found") from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     record_audit_event(
         user_id=owner["id"],
