@@ -397,12 +397,16 @@ def edit_text_document(owner_id, document_id, title, content, category=None):
     return get_user_document(owner_id, document_id)
 
 
-def delete_user_document(owner_id, document_id):
+def delete_user_document(owner_id, document_id, index_document_id=None):
+    """Delete a service record and its vectors, including API-mapped vectors."""
     document = get_document(document_id, owner_id)
     if document is None:
         raise FileNotFoundError("Document not found")
 
-    delete_document_index(document_id, owner_id)
+    vector_document_id = (
+        document_id if index_document_id is None else index_document_id
+    )
+    delete_document_index(vector_document_id, owner_id)
 
     deleted = delete_document(document_id, owner_id)
     if deleted is None:
