@@ -1,8 +1,10 @@
 
 import { useEffect, useState } from 'react'
 import './App.css'
+import { buildSearchParams } from './searchParams'
+import { revokeAccessToken } from './authSession'
 
-const API_URL = 'http://127.0.0.1:8000'
+const API_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
 
 async function apiRequest(path, options = {}) {
   const token = sessionStorage.getItem('access_token')
@@ -199,7 +201,7 @@ const [semanticResults, setSemanticResults] = useState([])
 
 
 
-async function semanticSearch(query) {
+async function semanticSearch(query, page = 1) {
   if (query.trim().length < 3) {
     setDashboardError(true)
     setDashboardMessage('Please enter at least 3 characters to search.')
@@ -210,38 +212,30 @@ async function semanticSearch(query) {
   setDashboardError(false)
 
   try {
-    const params = new URLSearchParams({
-      q: query.trim(),
-      page: '1',
+    const params = buildSearchParams({
+      query,
+      page,
+      category: semanticCategory,
+      fileType: semanticFileType,
+      dateFrom,
+      dateTo,
     })
-
-    if (semanticCategory) {
-      params.set('category', semanticCategory)
-    }
-
-    if (semanticFileType) {
-      params.set('file_type', semanticFileType)
-    }
-
-    const data = await apiRequest(
-      `/api/search/semantic?${params.toString()}`
-    )
-
-    setSemanticResults(data.items || [])
-    setDashboardMessage(
-      `Found ${data.total ?? data.items?.length ?? 0} matching documents.`
-    )
+    const data = await apiRequest(`/api/search/semantic?${params}`)
+    const results = data.items || []
+    setSemanticResults(results)
+    setSearchPage(page)
+    setSearchTotal(data.total ?? results.length)
+    setDashboardMessage(`Found ${data.total ?? results.length} matching documents.`)
   } catch (err) {
+    setSemanticResults([])
+    setSearchTotal(0)
     setDashboardError(true)
     setDashboardMessage(err.message)
   }
 }
 
- 
-
-
 async function keywordSearch(query, page = 1) {
-  if (query.trim().length < 1) {
+  if (!query.trim()) {
     setDashboardError(true)
     setDashboardMessage('Please enter a search term.')
     return
@@ -249,46 +243,29 @@ async function keywordSearch(query, page = 1) {
 
   setDashboardMessage('')
   setDashboardError(false)
-  setSearchPage(1)
 
   try {
-    const params = new URLSearchParams({
-      q: query.trim(),
-    page: String(page),
+    const params = buildSearchParams({
+      query,
+      page,
+      category: semanticCategory,
+      fileType: semanticFileType,
+      dateFrom,
+      dateTo,
     })
-
-    if (semanticCategory) {
-      params.set('category', semanticCategory)
-    }
-
-    if (semanticFileType) {
-      params.set('file_type', semanticFileType)
-    }
-    if (dateFrom) {
-  params.set('date_from', dateFrom)
-}
-
-if (dateTo) {
-  params.set('date_to', dateTo)
-}
-
-    const data = await apiRequest(
-      `/api/search/keyword?${params.toString()}`
-    )
-
-    setSemanticResults(data.items || [])
-    setDashboardMessage(
-      `Found ${data.total ?? data.items?.length ?? 0} matching documents.`
-    )
+    const data = await apiRequest(`/api/search/keyword?${params}`)
+    const results = data.items || []
+    setSemanticResults(results)
+    setSearchPage(page)
+    setSearchTotal(data.total ?? results.length)
+    setDashboardMessage(`Found ${data.total ?? results.length} matching documents.`)
   } catch (err) {
+    setSemanticResults([])
+    setSearchTotal(0)
     setDashboardError(true)
     setDashboardMessage(err.message)
   }
 }
-
-
-
-
 
   async function loadUploadedFiles() {
   try {
@@ -375,6 +352,7 @@ async function downloadFile(file) {
     setEditingId(null)
     setTitle('')
     setContent('')
+    setCategory('')
     setEditorOpen(true)
     setDashboardMessage('')
     setDashboardError(false)
@@ -445,7 +423,9 @@ function openDocumentPreview(document) {
     }
   }
 
-  function logout() {
+  async function logout() {
+    const token = sessionStorage.getItem('access_token')
+    // Clear local access immediately, even if the server is unreachable.
     sessionStorage.removeItem('access_token')
     sessionStorage.removeItem('user_role')
     setLoggedIn(false)
@@ -453,6 +433,13 @@ function openDocumentPreview(document) {
     setEditorOpen(false)
     setSearch('')
     changePage('login')
+
+    try {
+      await revokeAccessToken(token, API_URL)
+    } catch {
+      setError(true)
+      setMessage('Signed out of this browser, but server logout could not be confirmed.')
+    }
   }
 
   if (loggedIn) {
@@ -617,7 +604,7 @@ function openDocumentPreview(document) {
   onChange={(event) => setCategory(event.target.value)}
 >
   <option value="">Uncategorized</option>
-  <option nextPagevalue="Academic">Academic</option>
+  <option value="Academic">Academic</option>
   <option value="Work">Work</option>
   <option value="Personal">Personal</option>
 </select>
@@ -735,7 +722,12 @@ function openDocumentPreview(document) {
 >
 <select
   value={searchMode}
-  onChange={(event) => setSearchMode(event.target.value)}
+  onChange={(event) => {
+    setSearchMode(event.target.value)
+    setSearchPage(1)
+    setSearchTotal(0)
+    setSemanticResults([])
+  }}
   aria-label="Search mode"
 >
   <option value="semantic">AI Semantic Search</option>
@@ -746,9 +738,9 @@ function openDocumentPreview(document) {
       value={semanticQuery}
       onChange={(event) => setSemanticQuery(event.target.value)}
       placeholder="Try: database relationships"
-      minLength={3}
+      minLength={searchMode === 'keyword' ? 1 : 3}
       required
-      aria-label="Semantic search query"
+      aria-label="Search query"
     />
 
 <select
@@ -838,11 +830,10 @@ function openDocumentPreview(document) {
         disabled={searchPage <= 1}
         onClick={() => {
           const nextPage = searchPage - 1
-          setSearchPage(nextPage)
           if (searchMode === 'keyword') {
             keywordSearch(semanticQuery, nextPage)
           } else {
-            semanticSearch(semanticQuery)
+            semanticSearch(semanticQuery, nextPage)
           }
         }}
       >
@@ -856,11 +847,10 @@ function openDocumentPreview(document) {
         disabled={searchPage * 10 >= searchTotal}
         onClick={() => {
           const nextPage = searchPage + 1
-          setSearchPage(nextPage)
           if (searchMode === 'keyword') {
             keywordSearch(semanticQuery, nextPage)
           } else {
-            semanticSearch(semanticQuery)
+            semanticSearch(semanticQuery, nextPage)
           }
         }}
       >
