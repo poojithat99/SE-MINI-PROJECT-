@@ -14,6 +14,7 @@ from src.services.auth_service import (
     register_user,
     login_user,
     logout_user,
+    AuthenticationConfigurationError,
 )
 from src.repositories.admin_repository import record_audit_event
 
@@ -45,7 +46,8 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    username: str = Field(min_length=1, max_length=50)
+    # Allow email addresses, which may be longer than normal usernames.
+    username: str = Field(min_length=1, max_length=254)
     password: str = Field(min_length=1)
 
 
@@ -117,6 +119,16 @@ def login(request: LoginRequest):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
+        ) from exc
+
+    except AuthenticationConfigurationError as exc:
+        logger.error("Authentication is not configured: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Authentication is unavailable. Configure JWT_SECRET_KEY "
+                "in the backend environment and restart the server."
+            ),
         ) from exc
 
     except Exception as exc:
