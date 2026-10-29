@@ -10,6 +10,10 @@ from jose import jwt
 from jose.exceptions import JWTError
 from sqlalchemy.exc import IntegrityError
 
+class AuthenticationConfigurationError(RuntimeError):
+    """Server authentication configuration is missing or invalid."""
+
+
 from src.repositories.user_repository import (
     create_user,
     find_user_by_username,
@@ -58,7 +62,11 @@ def register_user(username, email, password):
 
 
 def login_user(username, password):
-    user = find_user_by_username(username.strip())
+    """Sign in with either the registered username or email address."""
+    identifier = username.strip()
+    user = find_user_by_username(identifier)
+    if user is None and "@" in identifier:
+        user = find_user_by_email(identifier.lower())
 
     if not user or not user.is_active or not bcrypt.checkpw(
         password.encode("utf-8"),
@@ -68,7 +76,7 @@ def login_user(username, password):
 
     secret = os.getenv("JWT_SECRET_KEY")
     if not secret:
-        raise RuntimeError(
+        raise AuthenticationConfigurationError(
             "JWT_SECRET_KEY environment variable is not configured"
         )
 
@@ -97,7 +105,7 @@ def decode_access_token(token):
     """Validate a JWT and reject tokens that have been revoked."""
     secret = os.getenv("JWT_SECRET_KEY")
     if not secret:
-        raise RuntimeError(
+        raise AuthenticationConfigurationError(
             "JWT_SECRET_KEY environment variable is not configured"
         )
 
