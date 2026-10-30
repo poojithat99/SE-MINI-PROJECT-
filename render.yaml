@@ -1,0 +1,42 @@
+# Render Blueprint for the AI-CMS monorepo.
+# Services deliberately disable automatic deployments. GitHub Actions
+# requests deployments only after CI succeeds on main.
+# Production SQLite and local file/vector storage require durable storage
+# for persistence; this Blueprint does not provision a paid disk.
+services:
+  - type: web
+    name: ai-cms-backend
+    branch: main
+    runtime: python
+    autoDeployTrigger: off
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      # Set to the actual https://... origin of your frontend (no trailing slash).
+      - key: AI_CMS_CORS_ORIGINS
+        sync: false
+
+  - type: web
+    name: ai-cms-frontend
+    branch: main
+    runtime: static
+    rootDir: frontend
+    autoDeployTrigger: off
+    # The public API address MUST be supplied at build time.
+    # Do not silently ship JS that still calls localhost:8000.
+    buildCommand: npm ci && test -n "$VITE_API_URL" && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: VITE_API_URL
+        sync: false
