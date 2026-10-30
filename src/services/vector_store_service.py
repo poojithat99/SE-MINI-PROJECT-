@@ -1,19 +1,29 @@
 import os
 from pathlib import Path
 
-import chromadb
+from functools import lru_cache
 
 
 VECTOR_PATH = Path(
     os.getenv("VECTOR_STORE_PATH", "vector_store")
 ).resolve()
 
-_client = chromadb.PersistentClient(path=str(VECTOR_PATH))
+@lru_cache(maxsize=1)
+def _get_collection():
+    import chromadb
+    client = chromadb.PersistentClient(path=str(VECTOR_PATH))
+    return client.get_or_create_collection(
+        name="document_passages",
+        metadata={"hnsw:space": "cosine"},
+    )
 
-_collection = _client.get_or_create_collection(
-    name="document_passages",
-    metadata={"hnsw:space": "cosine"},
-)
+
+class _LazyCollection:
+    def __getattr__(self, name):
+        return getattr(_get_collection(), name)
+
+
+_collection = _LazyCollection()
 
 
 def delete_document_index(document_id, owner_id):
