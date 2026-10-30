@@ -1,7 +1,7 @@
-# Deploy the backend only after the existing CI workflow passes on main.
-# Configure a Render web service (linked to main, auto-deploy disabled)
-# and set the RENDER_DEPLOY_HOOK_URL GitHub Actions secret first.
-name: CD - Deploy backend
+# Request Render deployments only for a successful CI push on main.
+# Backend and frontend require separate Render services and deploy hook secrets.
+# Without hooks this workflow reports "not configured" and does NOT deploy.
+name: CD - Deploy frontend and backend
 
 on:
   workflow_run:
@@ -13,12 +13,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: render-backend-deployment
+  group: render-production-deploy
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Request Render deployment
+    name: Request Render deployments
     if: >-
       ${{
         github.event.workflow_run.conclusion == 'success' &&
@@ -29,30 +29,65 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Trigger deployment of the tested commit
+      - name: Check deployment configuration
+        id: hooks
         shell: bash
         env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-          TESTED_COMMIT: ${{ github.event.workflow_run.head_sha }}
+          BACKEND_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL || secrets.RENDER_DEPLOY_HOOK_URL }}
+          FRONTEND_HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_URL }}
         run: |
-          if [[ -z "$RENDER_DEPLOY_HOOK_URL" ]]; then
-            echo "::error::Set the RENDER_DEPLOY_HOOK_URL GitHub Actions secret first."
-            exit 1
-          fi
-          if [[ -z "$TESTED_COMMIT" ]]; then
-            echo "::error::Missing CI commit SHA."
-            exit 1
+          set -euo pipefail
+          if [[ -n "$BACKEND_HOOK" ]]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Backend not deployed: add RENDER_BACKEND_DEPLOY_HOOK_URL in GitHub Actions secrets."
+            echo "- Backend: **NOT DEPLOYED** (deploy hook is not configured)." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-          # Render hooks may already contain query parameters.
+          if [[ -n "$FRONTEND_HOOK" ]]; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "frontend=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Frontend not deployed: add RENDER_FRONTEND_DEPLOY_HOOK_URL in GitHub Actions secrets."
+            echo "- Frontend: **NOT DEPLOYED** (deploy hook is not configured)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "CI-tested commit: ${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Note: accepting a deploy hook is not proof that the service is live." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Request backend deploy
+        if: steps.hooks.outputs.backend == 'true'
+        shell: bash
+        env:
+          HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL || secrets.RENDER_DEPLOY_HOOK_URL }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
           delimiter='?'
-          if [[ "$RENDER_DEPLOY_HOOK_URL" == *\?* ]]; then
-            delimiter='&'
-          fi
+          [[ "$HOOK" == *\?* ]] && delimiter='&'
+          code=$(curl --silent --show-error --output /dev/null \
+            --write-out '%{http_code}' --max-time 60 --request POST \
+            "${HOOK}${delimiter}ref=${TESTED_SHA}")
+          case "$code" in
+            200|202) echo "- Backend: deployment **requested** (HTTP $code)." >> "$GITHUB_STEP_SUMMARY" ;;
+            *) echo "::error::Backend Render hook returned HTTP $code."; exit 1 ;;
+          esac
 
-          curl --fail-with-body --silent --show-error \
-            --max-time 60 --request POST \
-            "${RENDER_DEPLOY_HOOK_URL}${delimiter}ref=${TESTED_COMMIT}"
-
-          echo "Render accepted the deployment request for ${TESTED_COMMIT}."
-          echo "Confirm deployment succeeds in the Render dashboard and check /health."
+      - name: Request frontend deploy
+        if: steps.hooks.outputs.frontend == 'true'
+        shell: bash
+        env:
+          HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_URL }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          delimiter='?'
+          [[ "$HOOK" == *\?* ]] && delimiter='&'
+          code=$(curl --silent --show-error --output /dev/null \
+            --write-out '%{http_code}' --max-time 60 --request POST \
+            "${HOOK}${delimiter}ref=${TESTED_SHA}")
+          case "$code" in
+            200|202) echo "- Frontend: deployment **requested** (HTTP $code)." >> "$GITHUB_STEP_SUMMARY" ;;
+            *) echo "::error::Frontend Render hook returned HTTP $code."; exit 1 ;;
+          esac
