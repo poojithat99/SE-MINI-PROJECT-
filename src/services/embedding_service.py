@@ -1,11 +1,11 @@
 import os
 from functools import lru_cache
 
-from sentence_transformers import SentenceTransformer
-
-
 @lru_cache(maxsize=1)
 def _get_model():
+    # Loading Torch/Transformers on import slows startup and can exceed
+    # small hosting instance limits. Only load the model for real AI work.
+    from sentence_transformers import SentenceTransformer
     model_name = os.getenv(
         "EMBEDDING_MODEL",
         "sentence-transformers/all-MiniLM-L6-v2",
