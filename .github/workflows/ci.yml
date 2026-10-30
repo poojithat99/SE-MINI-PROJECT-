@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  backend:
-    name: Backend Python tests
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
