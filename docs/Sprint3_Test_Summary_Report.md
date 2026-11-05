@@ -13,20 +13,20 @@ This is the **Test Summary Report** required by STP v1.0 Sections 8 and 14, in a
 - **Actual browser/API observations:** `docs/System_Validation_Report.md`, recording 25 sampled smoke/negative checks (not 25 additional STP cases).
 - **Automated run evidence:** `docs/Unit_Test_Report.md`, `docs/Code_Coverage_Report.md` and `docs/Branch_Coverage_Report.md`.
 - **Current GitHub test pipeline:** [CI on main, 5 Nov 2026](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41976537831) — successful. The historical local Python/frontend/coverage measurements below were recorded **1 November 2026** and are not being falsely redated.
-- **Additional Sprint 3 regressions:** `tests/test_sprint3_security.py` is submitted separately for CI validation; do not include its cases in test counts until its own CI run passes.
+- **Additional Sprint 3 regressions VERIFIED:** [CI run 41977292937](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41977292937) passed all **86 backend automated functions** (81 original plus five new `tests/test_sprint3_security.py` functions), **six frontend functions**, and the frontend build. The new CI evidence is mapped to matching whole-case STP IDs, and cross-user/admin/invalid-file/security checks are now established for the tested fixtures.
 
 ## 2. STP case-execution metrics (5 November snapshot)
 
 | Metric | Verified value | Interpretation |
 |---|---:|---|
 | Planned test-case IDs | **79** | 67 STP baseline + 12 updated regression IDs |
-| **Pass with case-specific recorded evidence** | **14** | 17.72% of planned cases |
+| **Pass with case-specific recorded evidence** | **32** | 40.51% of planned cases |
 | **Fail** | **0 recorded** | Does **not** mean no defects: most cases were not executed |
 | **Blocked** | **0 assigned in CSV** | Dependencies discussed below but not falsely recorded as test execution |
-| **Not run** | **65** | 24 include *partial* evidence, 41 have no mapped result |
-| Total formally executed (Pass + Fail, from register) | **14 / 79 = 17.72%** | STP **100% execution** exit criterion **not achieved** |
-| 1 Nov backend automated functions | **81/81 Pass** | Different unit of measurement than STP case IDs |
-| 1 Nov frontend automated functions | **6/6 Pass** | 87 successful automated functions across the two suites |
+| **Not run** | **47** | 20 include *partial* evidence, 27 have no mapped result |
+| Total formally executed (Pass + Fail, from register) | **32 / 79 = 40.51%** | STP **100% execution** exit criterion **not achieved** |
+| 1 Nov backend automated functions | **81/81 Pass** locally on 1 Nov; **86/86 Pass** in GitHub CI on 5 Nov | Different unit of measurement than STP case IDs |
+| 1 Nov frontend automated functions | **6/6 Pass** | 92 successful automated functions across the two suites in latest CI |
 
 Individual test IDs and partial-evidence qualifiers are retained in the CSV. A test that only verifies one part of a multi-part expected result must **remain Not run** until its whole acceptance behavior is shown; existing screenshots are not discarded.
 
@@ -37,7 +37,7 @@ Individual test IDs and partial-evidence qualifiers are retained in the CSV. A t
 | `src,backend` | 1180/1856 = **63.58%** | 227/476 = **47.69%** | 60% |
 | `src/services/*` | 414/549 = **75.41%** | 124/214 = **57.94%** | 71% |
 
-**STP NFR-007 line-coverage target (>=50% services): Met for the 1 November build.** `src/services/document_service.py` has 42% *combined* coverage and needs focused failure/cleanup-path testing. These are measured historical results, not re-runs on 5 November.
+**STP NFR-007 line-coverage target (>=50% services): Met for the 1 November build.** `src/services/document_service.py` has 42% *combined* coverage and needs focused failure/cleanup-path testing. These are measured historical results, not a coverage re-run on 5 November. Five additional backend tests passed CI on 5 November; a fresh coverage rate for those added functions has not yet been measured.
 
 ## 4. Performance and AI acceptance: measured results are missing
 
@@ -54,7 +54,7 @@ Synthetic fixtures (100 TXT files, five 20-page PDFs, 20 proposed labels, 10 que
 
 - **Core browser smoke scenarios:** login/logout, text-document creation/editing, document listing, PDF upload/download, local processing, deletion UI, keyword/one-sample semantic search, filters and required-field validation were observed/reported as described in `System_Validation_Report.md`.
 - **Basic authentication:** no-token and invalid-token requests were rejected with HTTP 401; invalid credentials rejected. Existing automated test cases cover token revocation and bcrypt hashing. This is **not a full penetration test**.
-- **Additional security suite** proposed in `tests/test_sprint3_security.py`: expired/tampered JWT, all normal-user admin route restrictions, authenticated pagination and semantic input bounds, file size/format rejection, and direct cross-user document access attempts. These are **pending independent CI evidence** when this report was written.
+- **Additional security suite PASSED in CI 41977292937**: expired/tampered JWT, all normal-user admin route restrictions, authenticated pagination and semantic input bounds, file size/format rejection, and direct cross-user document access attempts. See the 5 November test-case register and link above. The tests do not establish complete security/penetration testing.
 - **Usability TC-UX-01:** STP requires real outcomes from **three participants** registering, uploading and searching. No completed three-person observation sheet received; **Not run**.
 - **UAT/role matrix:** Formal acceptance by team members who did not write the code, full admin/owner endpoint checks, browser accessibility checklist, restart/recovery and hosted TLS protocol rejection are not fully documented.
 - **Environmental mismatch:** The STP reference benchmark is on a ~4-core/8GB local PC; hosted free-tier Render has a documented 512 MB OOM limit and cannot substitute for the local benchmark.
@@ -77,7 +77,7 @@ STP Section 5 exit criteria are:
 
 | Criterion | Current conclusion |
 |---|---|
-| 100% planned cases executed | **NOT MET — 14/79 logged** |
+| 100% planned cases executed | **NOT MET — 32/79 logged** |
 | All High-priority cases passed | **NOT DEMONSTRATED** |
 | No open critical/high-severity defects | **NOT CERTIFIED** — #72 and #75 require severity/exception decisions |
 | NFR-001 through NFR-004 targets met | **NOT DEMONSTRATED** |
