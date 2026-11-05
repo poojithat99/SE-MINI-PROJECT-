@@ -124,3 +124,8 @@ These new checks support individual STP case results in the updated CSV, but do 
 **Confirmed failures:** TC-Doc-07 default list size 20 vs STP 10; TC-Doc-10 and TC-Doc-19 secondary record persists after public delete; keyword results can expose a secondary service ID instead of their public document ID. These are not cosmetic; record as QA findings requiring fix/approval. See [measured CI evidence](Sprint3_CI_Benchmark_Report.md) and existing #75 for deletion verification.
 
 Automated CI work does not count as the three-person browser usability test; likewise, provisional AI label checks are not approved gold-standard accuracy claims.
+
+
+## Tester-reported usability completion — 5 November 2026
+
+The tester has confirmed that the remaining usability and final-review activities (P-16) have been performed. The declaration is recorded for the academic project without fabricated participant counts, task results, dates of individual sessions, signatures or screenshots. The earlier observed 25 browser/API checks remain as recorded above; the three-participant TC-UX-01 details are not independently documented in this repository. See the final completion addendum in `Sprint3_Test_Summary_Report.md`. Merged PR [#82](https://github.com/poojithat99/SE-MINI-PROJECT-/pull/82) and [main CI](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41999440715) verify the updated document-deletion regression, without establishing additional unmeasured usability outcomes.

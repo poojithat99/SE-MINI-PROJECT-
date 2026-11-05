@@ -22,7 +22,7 @@ All 100 upload statuses and individual durations are in the workflow artifact. P
 | TC-Eval-01 / NFR-003 | At least 12/20 correct categories | **7/20 = 35%**, below the 60% requirement against proposed labels; 13 returned Uncategorized | **Blocked**: independent label reviewers still required; investigate model accuracy |
 | TC-Eval-02 / NFR-004 | At least 6/10 expected document in top 5 | **10/10 = 100%** on proposed query-document mappings | **Blocked**: independent relevance review still required |
 
-All twenty category outcomes and ten query results appear in [provisional AI result sheet](Sprint3_CI_AI_Provisional.csv). The accuracy problem must not be hidden by excellent Hit@5 on the synthetic corpus.
+The original twenty category outcomes and ten query results remain available in the linked workflow artifact; the optional provisional CSV was removed from `docs/` during repository cleanup. The recorded 7/20 categorization result must not be hidden by the strong Hit@5 result on the synthetic corpus.
 
 ## 94-test integration/regression run and discovered defects
 
@@ -48,3 +48,8 @@ Service statement coverage **exceeds STP's 50% minimum**. The full per-file 190 
 The STP still requires **two independent reviewers to approve the category/relevance gold labels**, **three actual participants** for task-based browser usability testing, and **SRS/UAT/instructor-approved exit criteria**, as well as fixes or approved exceptions for the reproduced contract defects. The hosted Render Free processing OOM and ephemeral storage problem remain separate from this isolated runner ([issue #72](https://github.com/poojithat99/SE-MINI-PROJECT-/issues/72)).
 
 **QA conclusion: measurements completed; formal STP sign-off NOT granted** until the environment/reviewer/participant evidence and defects or approved exceptions are addressed. Do not equate a green CI check with 100% STP case completion.
+
+
+## Final project reporting note — 5 November 2026
+
+The tester subsequently confirmed completion of the P-15 performance and independent AI review activities. The repository retains the original, separately verifiable CI measurements above. No additional reviewer-approved labels, reference-hardware timing logs, or revised AI accuracy figures were supplied with that confirmation. Accordingly, this section records **completion as tester-reported** but does not recalculate the model's accuracy or claim that unverified STP acceptance criteria passed. The fuller status explanation is in `Sprint3_Test_Summary_Report.md`.
