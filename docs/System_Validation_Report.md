@@ -101,3 +101,18 @@ The following are **Not Run / Not Fully Verified** for the formal STP; do not co
 ## 7. Conclusion
 
 **Core local-system smoke validation: PASSED for the recorded scenarios. Full STP system validation: INCOMPLETE / requires explicit dispositions for remaining planned cases.** The results support the AI-CMS application's baseline workflows, not a claim that every requirement, edge case, target or production behavior has passed.
+
+## 8. Subsequent CI-backed security/validation integration checks — 5 November 2026
+
+**Evidence:** [GitHub Actions CI #41977292937](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41977292937) on proposed Sprint 3 branch; **86 Python test functions passed, including five new functions in `tests/test_sprint3_security.py`**. These are actual automated CI results, not additional manual browser screenshots.
+
+| Verified check | Observed result | Scope |
+|---|---|---|
+| Expired (35-minute-old) and tampered bearer JWT | Both returned **401** | API with registered disposable user |
+| Non-admin permissions | **403** for all four currently defined admin route/method combinations | Category list/create/delete and audit-log list |
+| Other-user document ID access | **404** on detail, download, PATCH, reprocess and DELETE; owner retained access | Sample processed TXT; cross-user API access |
+| Authenticated list pagination | `page=0`, `limit=0`, `limit=101` returned **400** | Range validation, not STP 10-item default requirement |
+| Authenticated semantic query boundaries | 2-character and 301-character query returned **422**; reversed dates returned **400** | Semantic route |
+| Invalid file input | Empty PDF, EXE, PNG, ZIP, header-spoofed PDF and invalid DOCX returned **400**; >10 MiB TXT returned **413** | API upload validation |
+
+These new checks support individual STP case results in the updated CSV, but do not substitute for benchmark timings, reviewer-approved AI metrics, three-person usability, full document cleanup verification, or formal UAT acceptance. Hosted OOM issue #72 remains independent of local CI success.

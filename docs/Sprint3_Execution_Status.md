@@ -16,12 +16,12 @@
 
 | Execution evidence | Number |
 |---|---:|
-| Pass with case-specific evidence | 14 |
-| Not run, but partial evidence annotated | 24 |
-| Not run with no mapped evidence yet | 41 |
+| Pass with case-specific evidence | 32 |
+| Not run, but partial evidence annotated | 20 |
+| Not run with no mapped evidence yet | 27 |
 | Total planned STP cases | 79 |
 
-The 24 partial cases are **not** counted as passed. Browser screenshots and aggregated automated run results cannot independently verify every sub-step of a multi-part case. Actual Results, date, evidence and coverage remain traceable in the CSV.
+The 20 partial cases are **not** counted as passed. Browser screenshots and aggregated automated run results cannot independently verify every sub-step of a multi-part case. Actual Results, date, evidence and coverage remain traceable in the CSV.
 
 ## Outstanding exit criteria
 
@@ -36,8 +36,14 @@ The STP requires **all cases executed**, all high-priority cases passed, zero cr
 ## Disposition and GitHub safety
 
 - Keep Sprint 3 **open** until full tests are executed or deviations are explicitly approved.
-- The test-case execution PR can be reviewed now; merging a docs-only PR to `main` triggers CI and then GitHub CD, which may redeploy the Render Free services. Use caution because their database/storage can be ephemeral.
+- PR #74 was merged to `main` on 5 November. [PR #76](https://github.com/poojithat99/SE-MINI-PROJECT-/pull/76) contains additional security CI tests and the Test Summary Report; merging a PR to `main` triggers CI and then GitHub CD, which may redeploy the Render Free services. Use caution because their database/storage can be ephemeral.
 - If source changes, repeat affected cases and coverage. Historical 1 November results should not be re-dated without rerunning.
 - Never commit JWT secrets, credentials, actual participants' private information, local DB files, raw uploaded documents or generated `storage/` artifacts.
 
 **Next action:** run the local Sprint 3 residual test runner using a disposable standard-user QA account, then update the CSV/reports with measured outcomes. The runner is provided separately as a ZIP in the QA conversation until the final validated version is committed to `scripts/`.
+
+## CI regression verification — 5 November 2026
+
+[CI 41977292937](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41977292937) succeeded: **86/86 Python tests and six frontend tests**. Five new integration functions covered expired/tampered JWT, four admin methods denied to users, direct cross-user ownership denial, invalid page/search inputs, and seven invalid upload samples. The case register now has **32 Pass, 47 Not run** (including **20** partially evidenced cases). This is **40.51%** of 79 cases mapped to passing whole-case checks; no claim of full STP acceptance.
+
+[PR #74](https://github.com/poojithat99/SE-MINI-PROJECT-/pull/74) is now **merged** on `main`. The summary/report update is proposed in [PR #76](https://github.com/poojithat99/SE-MINI-PROJECT-/pull/76).
