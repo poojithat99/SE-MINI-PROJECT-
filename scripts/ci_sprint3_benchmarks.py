@@ -9,6 +9,7 @@ import json
 import os
 import platform
 import statistics
+import sys
 import tempfile
 import time
 import uuid
@@ -16,6 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))  # scripts/ entrypoint must also resolve project packages
 FIX = ROOT / "storage" / "part3_test_data"
 OUT = ROOT / "storage" / "sprint3_benchmark_evidence"
 OUT.mkdir(parents=True, exist_ok=True)
