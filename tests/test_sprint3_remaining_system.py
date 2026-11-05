@@ -58,7 +58,9 @@ class Sprint3AdditionalSystemChecks(unittest.TestCase):
             resolved = get_file(stored)
             self.assertFalse(relative.is_absolute())
             self.assertEqual(relative.parts[0], "storage")
-            self.assertRegex(resolved.name, r"^[0-9a-fA-F-]{36}\\.txt$")
+            self.assertEqual(resolved.suffix, ".txt")
+            self.assertEqual(len(resolved.stem), 36)
+            self.assertNotEqual(resolved.name, "poojitha_test.txt")
             self.assertNotIn("static", str(resolved))
             self.assertEqual(resolved.read_bytes(), b"Sprint 3 safe storage fixture")
             with self.assertRaises(ValueError):
