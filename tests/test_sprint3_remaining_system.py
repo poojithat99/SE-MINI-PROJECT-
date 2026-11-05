@@ -91,9 +91,9 @@ class Sprint3AdditionalSystemChecks(unittest.TestCase):
         finally:
             self.client.delete(f"/api/documents/{doc_id}", headers=headers)
 
-    @unittest.expectedFailure
+    @unittest.skip("Known keyword/public ID mapping defect (#81); ID equality can occur accidentally in fresh CI databases")
     def test_keyword_results_use_public_document_ids(self):
-        """EXPECTED FAILURE: keyword result ID maps to service record, not public API record."""
+        """Deferred until a deterministic ID-divergence fixture and mapping fix are implemented."""
         headers, _ = self.user()
         doc = self.post_file(headers, "stp_public_link.txt",
              b"Unique keyword linkage regression and indexing evidence.",
@@ -152,9 +152,8 @@ class Sprint3AdditionalSystemChecks(unittest.TestCase):
         self.assertEqual(self.client.get("/api/documents", headers=headers).status_code, 200)
         self.client.delete("/api/documents/" + str(bad.json()["id"]), headers=headers)
 
-    @unittest.expectedFailure
     def test_public_delete_removes_secondary_service_record(self):
-        """EXPECTED FAILURE — documents route only removes primary row/file (known cleanup gap)."""
+        """Deleting through the public API must also remove the service record."""
         headers, owner = self.user()
         doc = self.post_file(headers, "cleanup_regression.txt",
              b"Document lifecycle indexing and complete deletion consistency.",

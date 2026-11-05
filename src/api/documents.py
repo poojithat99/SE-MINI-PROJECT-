@@ -522,6 +522,25 @@ def remove_document(
     document = owned_document(db, doc_id, owner.id)
     storage_path = document.storage_path
     document_id = document.id
+    # Remove the matching secondary processing record and its vector entries
+    # before deleting the primary row. A failed cleanup must not silently
+    # report a successful 204 response while searchable content remains.
+    service_doc = find_service_document(account, document)
+    if service_doc is not None:
+        try:
+            delete_user_document(
+                account_identity_id(account),
+                service_doc["id"],
+                index_document_id=document_id,
+            )
+        except Exception:
+            logger.exception(
+                "Could not remove processing data for document %s", document_id
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="Document processing cleanup failed",
+            )
 
     db.delete(document)
     db.commit()
