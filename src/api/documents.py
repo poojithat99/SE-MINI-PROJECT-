@@ -303,7 +303,7 @@ async def upload_document(
 @router.get("")
 def list_documents(
     page: int = 1,
-    limit: int = 20,
+    limit: int = 10,
     account: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
