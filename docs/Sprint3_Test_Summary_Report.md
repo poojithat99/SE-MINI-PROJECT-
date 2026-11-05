@@ -20,11 +20,11 @@ This is the **Test Summary Report** required by STP v1.0 Sections 8 and 14, in a
 | Metric | Verified value | Interpretation |
 |---|---:|---|
 | Planned test-case IDs | **79** | 67 STP baseline + 12 updated regression IDs |
-| **Pass with case-specific recorded evidence** | **32** | 40.51% of planned cases |
-| **Fail** | **0 recorded** | Does **not** mean no defects: most cases were not executed |
-| **Blocked** | **0 assigned in CSV** | Dependencies discussed below but not falsely recorded as test execution |
-| **Not run** | **47** | 20 include *partial* evidence, 27 have no mapped result |
-| Total formally executed (Pass + Fail, from register) | **32 / 79 = 40.51%** | STP **100% execution** exit criterion **not achieved** |
+| **Pass with case-specific recorded evidence** | **37** | 46.84% of planned cases |
+| **Fail** | **3** | CI-reproduced contract defects: public delete, 10-item paging |
+| **Blocked** | **4** | CI benchmarks complete; formal reference/reviewer requirements unmet |
+| **Not run** | **35** | Multi-step system/UAT checks remain unverified |
+| Formal pass/fail cases | **40 / 79 = 50.63%** | Another four are Blocked; 35 remain Not run |
 | 1 Nov backend automated functions | **81/81 Pass** locally on 1 Nov; **86/86 Pass** in GitHub CI on 5 Nov | Different unit of measurement than STP case IDs |
 | 1 Nov frontend automated functions | **6/6 Pass** | 92 successful automated functions across the two suites in latest CI |
 
@@ -43,10 +43,10 @@ Individual test IDs and partial-evidence qualifiers are retained in the CSV. A t
 
 | Test ID | STP acceptance target | Real evaluated result | Disposition |
 |---|---|---|---|
-| TC-Perf-01 / NFR-001 | 100 stored documents; >=18/20 search queries <=5 s (p90 target) | No valid 100-doc/20-query timing measurements supplied | **Not run** |
-| TC-Perf-02 / NFR-002 | >=4 of 5 roughly 20-page documents reach Processed <=120 s | No five-file measured runs supplied | **Not run** |
-| TC-Eval-01 / NFR-003 | >=12 of 20 correctly categorized documents, using independently approved labels | Reviewer approval and model outputs missing | **Not run** |
-| TC-Eval-02 / NFR-004 | Expected document in top 5 for >=6 of 10 predefined semantic queries | One informal relevant result, not the predefined ten-query Hit@5 evaluation | **Not run** |
+| TC-Perf-01 / NFR-001 | 100 stored documents; >=18/20 search queries <=5 s (p90 target) | 20/20 CI queries within 5 s, with 100 stored Processed files (CI hardware; formal laptop equivalence pending) | **Not run** |
+| TC-Perf-02 / NFR-002 | >=4 of 5 roughly 20-page documents reach Processed <=120 s | Five of five 20-page PDFs Processed in <1 s on CI hardware; formal laptop equivalence pending | **Not run** |
+| TC-Eval-01 / NFR-003 | >=12 of 20 correctly categorized documents, using independently approved labels | Model output measured: 7/20 = 35% versus unapproved labels; two-reviewer approval missing | **Not run** |
+| TC-Eval-02 / NFR-004 | Expected document in top 5 for >=6 of 10 predefined semantic queries | CI measured 10/10 proposed Hit@5 queries; independent relevance review missing | **Not run** |
 
 Synthetic fixtures (100 TXT files, five 20-page PDFs, 20 proposed labels, 10 queries) exist **as generator logic**, but fixture generation or an isolated unit test is not a performance/AI measurement. Two independent reviewers must approve evaluation labels before official classification accuracy scoring. Do **not** substitute predicted numbers or results from mock embeddings.
 
@@ -77,7 +77,7 @@ STP Section 5 exit criteria are:
 
 | Criterion | Current conclusion |
 |---|---|
-| 100% planned cases executed | **NOT MET — 32/79 logged** |
+| 100% planned cases executed | **NOT MET — 40 Pass/Fail and 4 Blocked of 79** |
 | All High-priority cases passed | **NOT DEMONSTRATED** |
 | No open critical/high-severity defects | **NOT CERTIFIED** — #72 and #75 require severity/exception decisions |
 | NFR-001 through NFR-004 targets met | **NOT DEMONSTRATED** |
@@ -94,3 +94,9 @@ STP Section 5 exit criteria are:
 5. Review the CI/PR results, finalize dated reports and seek the team/instructor's explicit sign-off. Close Sprint 3 #66 only when evidence/approved exceptions establish the exit criteria.
 
 **Prepared from:** repository STP v1.0, merged Sprint 3 reports, updated case register, source-code inspection and observed local-console/CI evidence. No unperformed user/device or human-participant testing is represented as executed.
+
+## Final CI evidence update — 5 November 2026
+
+**This section supersedes older 32-pass and unmeasured-NFR descriptions in the 1 November baseline sections above.** [CI 41989973655](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41989973655) passed with **94 Python functions (91 ordinary Pass, three expected failure regressions)** and **6/6 frontend tests**. [Isolated performance, AI and coverage run 41989973658](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41989973658) completed successfully. The permanent measured outcomes and raw CSV links are in [Sprint3_CI_Benchmark_Report.md](Sprint3_CI_Benchmark_Report.md).
+
+**Final 79-case register for this run: 37 Pass, 3 Fail, 4 Blocked, 35 Not run.** The three expected failures are *actual unmet application requirements* and must not be counted as passing checks. Full STP sign-off remains **WITHHELD**. The CI runner is not the approved reference laptop, and AI expected labels still lack independent approval; the 35% AI categorization agreement is a concern that warrants a backend/model fix or an approved deviation.

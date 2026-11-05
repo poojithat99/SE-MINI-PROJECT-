@@ -116,3 +116,11 @@ The following are **Not Run / Not Fully Verified** for the formal STP; do not co
 | Invalid file input | Empty PDF, EXE, PNG, ZIP, header-spoofed PDF and invalid DOCX returned **400**; >10 MiB TXT returned **413** | API upload validation |
 
 These new checks support individual STP case results in the updated CSV, but do not substitute for benchmark timings, reviewer-approved AI metrics, three-person usability, full document cleanup verification, or formal UAT acceptance. Hosted OOM issue #72 remains independent of local CI success.
+
+## New final CI integrated system checks (5 November 2026)
+
+[CI run](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41989973655): 94 backend Python tests, **91 Pass plus three expected-failure regressions**; six frontend tests passed. Validated full corrupted/scanned/encrypted PDF processing **Failed** states with reasons and healthy subsequent API responses (TC-AI-03/TC-Rel-02); safe generated filenames, traversal handling and spoofed executable rejection (TC-Sec-07/08); case-insensitive all-term keyword search (TC-Srch-01).
+
+**Confirmed failures:** TC-Doc-07 default list size 20 vs STP 10; TC-Doc-10 and TC-Doc-19 secondary record persists after public delete; keyword results can expose a secondary service ID instead of their public document ID. These are not cosmetic; record as QA findings requiring fix/approval. See [measured CI evidence](Sprint3_CI_Benchmark_Report.md) and existing #75 for deletion verification.
+
+Automated CI work does not count as the three-person browser usability test; likewise, provisional AI label checks are not approved gold-standard accuracy claims.
