@@ -1,0 +1,49 @@
+name: Sprint 3 isolated performance and AI benchmark
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/ci_sprint3_benchmarks.py"
+      - "scripts/generate_part3_test_data.py"
+      - ".github/workflows/sprint3-benchmark.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      HF_HUB_DISABLE_XET: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install actual application and test-data dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install reportlab Pillow
+      - name: Execute isolated benchmarks with actual document-processing and embedding model
+        shell: bash
+        run: |
+          set -o pipefail
+          python -u scripts/ci_sprint3_benchmarks.py 2>&1 | tee sprint3-benchmark-console.txt
+      - name: Upload real benchmark evidence even on partial execution or failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sprint3-isolated-benchmark-evidence
+          path: |
+            storage/sprint3_benchmark_evidence/**
+            sprint3-benchmark-console.txt
+          retention-days: 30
+          if-no-files-found: warn
