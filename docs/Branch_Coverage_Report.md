@@ -41,3 +41,7 @@ The branch numbers come from the user-provided Coverage.py JSON calculation afte
 - Statement coverage is documented separately in `Code_Coverage_Report.md`. The 79 planned STP case IDs still require their own execution statuses.
 
 Tracking: https://github.com/poojithat99/SE-MINI-PROJECT-/issues/66
+
+## Latest CI branch coverage — 5 November 2026 (supersedes 1 November figures)
+
+**Evidence:** [94-test Coverage.py JSON](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41989973658). Pure **branch** coverage: overall `240 / 476 = 50.42%`; service layer `127 / 214 = 59.35%`. Service-layer statement coverage is separately `424 / 549 = 77.23%`. 94 Python tests executed: 91 passed normally, three known expected failures. Those expected failures represent defects and do not count as QA pass. Do not confuse these pure branch rates with Coverage.py combined console percentages.

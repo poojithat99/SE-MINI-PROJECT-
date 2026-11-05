@@ -12,16 +12,17 @@
 
 ## Test Case Document status
 
-**The CSV is the authoritative per-case execution register.** The 79 STP case IDs are all retained in `docs/Updated_Test_Cases.csv`. At this snapshot:
+**The CSV is the authoritative per-case execution register.** The 79 STP case IDs are all retained in `docs/Updated_Test_Cases.csv`. At the earlier PR #77 snapshot; see the newer verified CI snapshot below:
 
 | Execution evidence | Number |
 |---|---:|
-| Pass with case-specific evidence | 32 |
-| Not run, but partial evidence annotated | 20 |
-| Not run with no mapped evidence yet | 27 |
+| Pass with case-specific evidence | 37 |
+| Fail — reproduced contract mismatch | 3 |
+| Blocked pending reference environment / independent labels | 4 |
+| Not run (including partial/incomplete evidence) | 35 |
 | Total planned STP cases | 79 |
 
-The 20 partial cases are **not** counted as passed. Browser screenshots and aggregated automated run results cannot independently verify every sub-step of a multi-part case. Actual Results, date, evidence and coverage remain traceable in the CSV.
+Incomplete/partially evidenced cases are **not** counted as passed. Browser screenshots and aggregated automated run results cannot independently verify every sub-step of a multi-part case. Actual Results, date, evidence and coverage remain traceable in the CSV.
 
 ## Outstanding exit criteria
 
@@ -47,3 +48,13 @@ The STP requires **all cases executed**, all high-priority cases passed, zero cr
 [CI 41977292937](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41977292937) succeeded: **86/86 Python tests and six frontend tests**. Five new integration functions covered expired/tampered JWT, four admin methods denied to users, direct cross-user ownership denial, invalid page/search inputs, and seven invalid upload samples. The case register now has **32 Pass, 47 Not run** (including **20** partially evidenced cases). This is **40.51%** of 79 cases mapped to passing whole-case checks; no claim of full STP acceptance.
 
 [PR #74](https://github.com/poojithat99/SE-MINI-PROJECT-/pull/74) is now **merged** on `main`. The summary/report update is proposed in [PR #76](https://github.com/poojithat99/SE-MINI-PROJECT-/pull/76).
+
+## Verified final CI snapshot — 5 November 2026 (supersedes earlier counts)
+
+**Current 79-case register: 37 Pass, 3 Fail, 4 Blocked, 35 Not run.**
+
+- [CI #41989973655](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41989973655): **94 backend functions executed, 91 ordinary passes plus 3 known expected failures; six frontend tests passed.**
+- [Benchmark + coverage #41989973658](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41989973658): 100 processed files, 20/20 search queries <=5s, 5/5 PDFs <=120s; **provisional** AI category 7/20 and Hit@5 10/10; all data stored in `docs/Sprint3_CI_Benchmark_Report.md` and numeric CSV evidence.
+- Latest coverage: **65.30%** statement overall, **77.23%** service statement; **50.42%** branch overall, **59.35%** service branch.
+- Three reproduced defects: default 20-item paging vs STP 10; public delete leaves secondary DB records; keyword search returns a service ID rather than public ID.
+- **Formal STP sign-off withheld:** reference laptop benchmarking or approved runner equivalence; independent labels; three real usability participants; defects fixed or accepted by instructor.

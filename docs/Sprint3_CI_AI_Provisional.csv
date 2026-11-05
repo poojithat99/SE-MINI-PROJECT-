@@ -1,0 +1,31 @@
+type,id,expected_unapproved,observed,match_to_proposal
+category,EVAL-01,Technology,Uncategorized,false
+category,EVAL-02,Technology,Uncategorized,false
+category,EVAL-03,Technology,Uncategorized,false
+category,EVAL-04,Technology,Uncategorized,false
+category,EVAL-05,Business and Finance,Business and Finance,true
+category,EVAL-06,Business and Finance,Uncategorized,false
+category,EVAL-07,Business and Finance,Business and Finance,true
+category,EVAL-08,Business and Finance,Business and Finance,true
+category,EVAL-09,Education,Uncategorized,false
+category,EVAL-10,Education,Uncategorized,false
+category,EVAL-11,Education,Uncategorized,false
+category,EVAL-12,Health and Medicine,Health and Medicine,true
+category,EVAL-13,Health and Medicine,Uncategorized,false
+category,EVAL-14,Health and Medicine,Uncategorized,false
+category,EVAL-15,Law and Government,Law and Government,true
+category,EVAL-16,Law and Government,Law and Government,true
+category,EVAL-17,Law and Government,Law and Government,true
+category,EVAL-18,Science and Research,Uncategorized,false
+category,EVAL-19,Science and Research,Uncategorized,false
+category,EVAL-20,Science and Research,Uncategorized,false
+hit_at_5,SEM-01,EVAL-01,"106,120",True
+hit_at_5,SEM-02,EVAL-02,107,True
+hit_at_5,SEM-03,EVAL-05,"111,110",True
+hit_at_5,SEM-04,EVAL-07,"112,110",True
+hit_at_5,SEM-05,EVAL-09,"114,115,116,117,109",True
+hit_at_5,SEM-06,EVAL-12,117,True
+hit_at_5,SEM-07,EVAL-13,"118,117",True
+hit_at_5,SEM-08,EVAL-15,"120,108",True
+hit_at_5,SEM-09,EVAL-18,"123,118,122,125",True
+hit_at_5,SEM-10,EVAL-20,"125,123,122,119,107",True

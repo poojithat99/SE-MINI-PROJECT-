@@ -48,3 +48,7 @@ These **per-file numbers are combined percentages**, not per-file pure statement
 - Re-run the exact commands for the final code revision during the requested 2–6 November testing window; revise values if they change.
 
 Tracking: https://github.com/poojithat99/SE-MINI-PROJECT-/issues/66
+
+## Latest CI coverage — 5 November 2026 (supersedes 1 November figures)
+
+**Evidence:** [94-test Coverage.py JSON and console report](https://github.com/poojithat99/SE-MINI-PROJECT-/actions/runs/41989973658) from 5 November. Exact **statement/line coverage**: overall `1212 / 1856 = 65.30%`; `src/services/*` `424 / 549 = 77.23%`. The service-layer **50% STP line target is met** on the newer suite. Coverage.py combined statement+branch console display is **62%** for overall source (do not call it statement percentage). Historical numbers elsewhere in this report are from the earlier 81-test baseline.
