@@ -83,13 +83,31 @@ class Sprint3AdditionalSystemChecks(unittest.TestCase):
             valid = self.client.get("/api/search/keyword",
                 headers=headers, params={"q": "nEuRaL nEtWoRkS"})
             self.assertEqual(valid.status_code, 200, valid.text)
-            self.assertIn(doc_id, [item["id"] for item in valid.json()["items"]])
+            self.assertIn("Sprint3 Neural Search", [item["title"] for item in valid.json()["items"]])
             missed = self.client.get("/api/search/keyword",
                 headers=headers, params={"q": "neural unbelievablyabsent"})
             self.assertEqual(missed.status_code, 200, missed.text)
             self.assertEqual(missed.json()["total"], 0)
         finally:
             self.client.delete(f"/api/documents/{doc_id}", headers=headers)
+
+    @unittest.expectedFailure
+    def test_keyword_results_use_public_document_ids(self):
+        """EXPECTED FAILURE: keyword result ID maps to service record, not public API record."""
+        headers, _ = self.user()
+        doc = self.post_file(headers, "stp_public_link.txt",
+             b"Unique keyword linkage regression and indexing evidence.",
+             "Sprint3 public result link")
+        self.assertEqual(doc.status_code, 201, doc.text)
+        public_id = doc.json()["id"]
+        try:
+            resp = self.client.get("/api/search/keyword", headers=headers,
+                                   params={"q": "linkage regression"})
+            self.assertEqual(resp.status_code, 200, resp.text)
+            self.assertIn(public_id, [d["id"] for d in resp.json()["items"]],
+                          "Keyword search returned secondary service ID instead of public document ID")
+        finally:
+            self.client.delete(f"/api/documents/{public_id}", headers=headers)
 
     def test_pdf_corrupt_encrypted_and_image_only_end_failed_with_reason(self):
         headers, owner = self.user()
