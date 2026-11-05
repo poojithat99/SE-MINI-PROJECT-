@@ -37,6 +37,14 @@ jobs:
         run: |
           set -o pipefail
           python -u scripts/ci_sprint3_benchmarks.py 2>&1 | tee sprint3-benchmark-console.txt
+      - name: Re-run full backend suite with measured statement and branch coverage
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m coverage run --branch --source=src,backend -m unittest discover -s tests -v 2>&1 | tee sprint3-coverage-console.txt
+          mkdir -p storage/sprint3_benchmark_evidence
+          python -m coverage json -o storage/sprint3_benchmark_evidence/coverage_latest.json
+          python -m coverage report -m | tee storage/sprint3_benchmark_evidence/coverage_console.txt
       - name: Upload real benchmark evidence even on partial execution or failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -45,5 +53,6 @@ jobs:
           path: |
             storage/sprint3_benchmark_evidence/**
             sprint3-benchmark-console.txt
+            sprint3-coverage-console.txt
           retention-days: 30
           if-no-files-found: warn
