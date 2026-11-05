@@ -152,9 +152,8 @@ class Sprint3AdditionalSystemChecks(unittest.TestCase):
         self.assertEqual(self.client.get("/api/documents", headers=headers).status_code, 200)
         self.client.delete("/api/documents/" + str(bad.json()["id"]), headers=headers)
 
-    @unittest.expectedFailure
     def test_public_delete_removes_secondary_service_record(self):
-        """EXPECTED FAILURE — documents route only removes primary row/file (known cleanup gap)."""
+        """Deleting through the public API must also remove the service record."""
         headers, owner = self.user()
         doc = self.post_file(headers, "cleanup_regression.txt",
              b"Document lifecycle indexing and complete deletion consistency.",
