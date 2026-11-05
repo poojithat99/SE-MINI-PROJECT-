@@ -180,9 +180,8 @@ class Sprint3AdditionalSystemChecks(unittest.TestCase):
                 except FileNotFoundError:
                     pass
 
-    @unittest.expectedFailure
     def test_public_document_default_page_size_matches_stp_ten(self):
-        """EXPECTED FAILURE — source defaults to 20 whereas STP TC-Doc-07 requires 10."""
+        """Public list defaults to the STP-required ten documents per page."""
         headers, _ = self.user()
         resp = self.client.get("/api/documents", headers=headers)
         self.assertEqual(resp.status_code, 200, resp.text)
